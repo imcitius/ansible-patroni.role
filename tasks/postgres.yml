@@ -1,0 +1,32 @@
+---
+
+- name: Adding repository public key
+  rpm_key: state=present key=https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-96
+
+- name: Import Postgresql96 repo
+  yum: name=https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm state=present
+  when: ansible_distribution == 'CentOS'
+
+- name: Install PGsql96
+  yum: name={{ item }} state=present
+  with_items:
+    - postgresql96
+    - postgresql96-contrib
+    - postgresql96-server
+    - python-psycopg2
+    - repmgr96
+  when: ansible_distribution == 'CentOS'
+
+- name: Import Postgresql96 repo
+  dnf: name=https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm state=present
+  when: ansible_distribution == 'Fedora'
+
+- name: Install PGsql96
+  dnf: name={{ item }} state=present
+  with_items:
+    - postgresql96
+    - postgresql96-contrib
+    - postgresql96-server
+    - python-psycopg2
+    - repmgr96
+  when: ansible_distribution == 'Fedora'

@@ -1,0 +1,20 @@
+---
+
+- name: Install keepalived
+  yum: name={{ item }} state=present
+  with_items:
+    - keepalived
+
+- name: put alert script
+  template: src=alert.sh.j2 dest=/usr/local/sbin/alert.sh backup=yes mode=0755
+
+- name: create includes directory
+  file: path=/etc/keepalived/include.d state=directory
+
+- name: put general keepalived config
+  template: src=keepalived.conf.j2 dest=/etc/keepalived/keepalived.conf backup=yes
+  notify: restart keepalived
+
+- name: put config
+  template: src=keepalived-patroni.conf.j2 dest=/etc/keepalived/include.d/patroni.conf backup=yes
+  notify: restart keepalived

@@ -1,0 +1,8 @@
+
+- name: create consul config includes dir if not exist
+  file: path=/etc/consul.d state=directory
+
+- name: put consul services config for agent
+  template: src=consul-services.json.j2 dest=/etc/consul.d/consul-services.json
+  when: ( consul_services is defined ) and  ( consul_services )
+  notify: restart consul

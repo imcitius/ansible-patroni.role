@@ -1,0 +1,58 @@
+name: {{ patroni_node_name }}
+scope: &scope {{ patroni_scope }}
+
+consul:
+  host: {{ consul_addr }}
+
+restapi:
+  listen: {{ patroni_ipaddr }}:8008
+  connect_address: {{ patroni_ipaddr }}:8008
+  auth: 'username:{{ patroni_rest_password }}'
+
+bootstrap:
+  dcs:
+    ttl: &ttl 30
+    loop_wait: &loop_wait 10
+    maximum_lag_on_failover: 1048576 # 1 megabyte in bytes
+    synchronous_mode: True
+    postgresql:
+      use_pg_rewind: true
+      use_slots: true
+      parameters:
+        max_connections: {{ pgsql_maxconn }}
+        synchronous_commit: "on"
+        synchronous_standby_names: "*"
+        archive_mode: "on"
+        wal_level: hot_standby
+        archive_command: {{ pgsql_archive_command }}
+        max_wal_senders: 10
+        wal_keep_segments: 8
+        archive_timeout: 1800s
+        max_replication_slots: 5
+        hot_standby: "on"
+        wal_log_hints: "on"
+        archive_command: "{{ archive_command }}"
+
+  pg_hba:  # Add following lines to pg_hba.conf after running 'initdb'
+    - host replication all 192.168.0.0/16 trust
+    - host all all 0.0.0.0/0 md5
+
+  users:
+    replication:
+      username: replicator
+      password: {{ patroni_replicator_password }}
+    superuser:
+      username: superuser
+      password: {{ patroni_postgres_password }}
+
+postgresql:
+  superuser:
+    username: superuser
+    password: {{ patroni_postgres_password }}
+  replication:
+    username: replicator
+    password: {{ patroni_replicator_password }}
+  connect_address: {{ patroni_ipaddr }}:5432
+  data_dir: /var/lib/pgsql/9.6/data
+  listen: 0.0.0.0:5432
+  custom_conf: /etc/patroni/postgresql.base.conf

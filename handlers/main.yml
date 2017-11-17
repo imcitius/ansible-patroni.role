@@ -1,0 +1,14 @@
+---
+
+- name: restart patroni
+  systemd: state=restarted name=patroni enabled=yes
+
+- name: restart keepalived
+  systemd: state=restarted name=keepalived enabled=yes
+
+- name: restart haproxy
+  systemd: state=restarted name=haproxy enabled=yes
+
+- name: restart consul
+  systemd: state=restarted name=consul enabled=yes
+  notify: restart patroni

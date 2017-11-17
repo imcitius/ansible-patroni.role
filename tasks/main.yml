@@ -1,0 +1,16 @@
+
+- include: postgres.yml
+- include: patroni.yml
+- include: haproxy.yml
+
+- include: consul.yml
+- include: keepalived.yml
+  when: ( skip_keepalived is not defined ) or ( not skip_keepalived )
+
+- name: full restart if asked
+  command: /bin/true
+  when: fullrestart is defined
+  notify:
+    - restart patroni
+    - restart haproxy
+    - restart keepalived

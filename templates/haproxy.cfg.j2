@@ -1,0 +1,9 @@
+ listen postgresql-cluster
+  bind 0.0.0.0:5000
+  balance  source
+  option  tcpka
+  option  httpchk
+  option  tcplog
+  {% for host in groups['pgsql-cluster'] %}
+  server {{ host }} {{ host }}:5432 maxconn {{ pgsql_maxconn }} check inter 2000 rise 2 fall 5 port 8008
+  {% endfor %}

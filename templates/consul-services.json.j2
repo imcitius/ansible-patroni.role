@@ -1,0 +1,17 @@
+{
+  "services": [
+    {
+      "id": "{{ patroni_scope }}",
+      "name": "{{ patroni_scope }}",
+      "address": "{{ consul_bind_address }}",
+      "port": 5000,
+      "checks": [
+        {
+          "tcp": "{{ consul_bind_address }}:5000",
+          "interval": "1s",
+          "timeout": "5s"
+        }
+      ]
+    }
+  ]
+}

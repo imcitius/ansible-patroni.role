@@ -1,0 +1,66 @@
+---
+
+- name: Install haproxy
+  yum: name={{ item }} state=present
+  with_items:
+    - haproxy
+  when: ansible_distribution == 'CentOS'
+
+- name: Install haproxy
+  dnf: name={{ item }} state=present
+  with_items:
+    - haproxy
+  when: ansible_distribution == 'Fedora'
+
+- name: Adding sysctl keys for haproxy
+  sysctl: name={{ item }} value=1 state=present
+  with_items:
+    - "net.ipv4.ip_forward"
+    - "net.ipv4.ip_nonlocal_bind"
+
+- name: Check if haproxy has default config
+  command: grep -q "Example configuration for a possible web application" /etc/haproxy/haproxy.cfg
+  register: haproxyconfdefault
+  check_mode: no
+  ignore_errors: True
+  changed_when: False
+
+- name: Delete default config if any
+  file: path=/etc/haproxy/haproxy.cfg state=absent
+  when: haproxyconfdefault.rc == 0
+
+- name: check if haproxy config is already present on target host
+  stat: path=/etc/haproxy/haproxy.cfg
+  register: config_present
+  when: haproxy_base_config is defined
+
+- name: generate Haproxy config blank
+  template: src=haproxy-blank.cfg.j2 dest=/etc/haproxy/haproxy.cfg backup=no
+  when: haproxy_base_config is defined and ( config_present.stat.exists == False )
+
+- name: generate Haproxy config block
+  template: src={{ postgresql_haproxy_base_config }} dest=/tmp/ansible-haproxy-temp backup=no
+  when: postgresql_haproxy_base_config is defined
+  delegate_to: localhost
+  run_once: yes
+
+- name: generate Haproxy config block
+  template: src={{ haproxy_base_config }} dest=/tmp/ansible-haproxy-temp backup=no
+  when: haproxy_base_config is defined and postgresql_haproxy_base_config is not defined
+  delegate_to: localhost
+  run_once: yes
+
+- name: insert/update Haproxy configuration using a local file
+  blockinfile:
+    block: "{{ lookup('file', '/tmp/ansible-haproxy-temp') }}"
+    dest: "/etc/haproxy/haproxy.cfg"
+    backup: yes
+    marker: "### <!-- {mark} ANSIBLE MANAGED BLOCK for patroni -->"
+  when: haproxy_base_config is defined
+  notify: restart haproxy
+
+- name: remove temp file
+  file: path=/tmp/ansible-haproxy-temp state=absent
+  when: haproxy_base_config is defined
+  delegate_to: localhost
+  run_once: yes

@@ -1,0 +1,10 @@
+---
+# defaults file for ansible-patroni.role
+haproxy_base_config: haproxy.cfg.j2
+pgsql_base_config: templates/postgresql.base.conf.j2
+pgsql_maxconn: 200
+
+patroni_ipaddr: "{{ lookup('env','CONSUL_BIND_ADDRESS') | default(hostvars[inventory_hostname]['ansible_'+ consul_iface ]['ipv4']['address'], true) }}"
+haproxy_bind_address: "{{ patroni_ipaddr }}"
+
+patroni_version: 1.3.6

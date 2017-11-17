@@ -1,0 +1,5 @@
+test_code:
+  tags:
+    - ansible
+  script:
+    - ansible-lint .
